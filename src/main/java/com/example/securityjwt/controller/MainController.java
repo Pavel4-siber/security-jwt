@@ -1,6 +1,7 @@
 package com.example.securityjwt.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -19,7 +20,7 @@ public class MainController {
         return "Unsecured data";
     }
 
-    @GetMapping("/secured")
+    @GetMapping(value = "/secured")
     public String securedData(){
         return "Secured data";
     }
