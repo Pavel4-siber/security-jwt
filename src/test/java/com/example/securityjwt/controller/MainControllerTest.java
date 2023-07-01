@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.test.context.annotation.SecurityTestExecutionListeners;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -49,6 +50,26 @@ class MainControllerTest {
                         content().string("Unsecured data"));
     }
 
+    @Test
+    @WithMockUser(username = "ADMIN", password = "admin", authorities = "ROLE_ADMIN")
+    void adminData_ReturnResponseWithStatusOk()throws Exception{
+        //given
+        var requestBuilder = MockMvcRequestBuilders.get("/admin");
+        //when
+        this.mockMvc.perform(requestBuilder)
+                .andExpectAll(
+                        status().isOk(),
+                        content().contentType(MediaType.APPLICATION_JSON),
+                        content().json("""
+                                    {
+                                    "id": null,
+                                    "username": null,
+                                    "password": null,
+                                    "email": null,
+                                    "roles": null
+                                    }
+                                    """));
+    }
 
     @Test
     void unsecuredData() throws IOException, InterruptedException {
