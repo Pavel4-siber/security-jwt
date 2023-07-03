@@ -1,8 +1,10 @@
 package com.example.securityjwt.config;
 
-import com.example.securityjwt.service.UserService;
+import com.example.securityjwt.filters.JwtRequestFilter;
+import com.example.securityjwt.services.UserDetailsServiceImpl;
+import com.example.securityjwt.services.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.web.servlet.server.Session;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -14,9 +16,9 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
 
 /**
@@ -25,33 +27,31 @@ import org.springframework.security.web.session.HttpSessionEventPublisher;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(securedEnabled = true)
-@RequiredArgsConstructor
+@EnableMethodSecurity
 public class SecurityConfig {
 
-    private final UserService userService;
+    @Autowired
+    private UserDetailsServiceImpl userDetailsService;
+
+    @Autowired
+    private JwtRequestFilter requestFilter;
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
-        http.authorizeHttpRequests(r->
-            {r.requestMatchers("/login").permitAll();
-                r.requestMatchers("/secured", "/admin").hasRole("ADMIN");
-                r.requestMatchers("/unsecured", "/info").hasAnyRole("USER", "ADMIN");
-            r.anyRequest().authenticated();})
-                .formLogin(login->{})
-                .sessionManagement(httpSecuritySessionManagementConfigurer ->
-                        httpSecuritySessionManagementConfigurer.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
-                .sessionManagement(ses-> {ses.maximumSessions(2)
-                                                .expiredUrl("/sessionExpired.html");
-                                    ses.invalidSessionUrl("/invalidSession.html");
-                                    ses.sessionFixation().newSession();});
-
-        return http.build();
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
+        return http.csrf().disable()
+                .authorizeHttpRequests()
+                .requestMatchers("/register", "/authenticate", "/sign-up").permitAll()
+                .anyRequest().authenticated()
+                .and()
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .and()
+                .addFilterBefore(requestFilter, UsernamePasswordAuthenticationFilter.class)
+                .build();
     }
 
     @Bean
     public PasswordEncoder passwordEncoder(){
-        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
+        return new BCryptPasswordEncoder();
     }
 
     @Bean
@@ -63,7 +63,7 @@ public class SecurityConfig {
     public DaoAuthenticationProvider daoAuthenticationProvider(){
         DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
         daoAuthenticationProvider.setPasswordEncoder(passwordEncoder());
-        daoAuthenticationProvider.setUserDetailsService(userService);
+        daoAuthenticationProvider.setUserDetailsService(userDetailsService);
         return daoAuthenticationProvider;
     }
 

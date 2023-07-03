@@ -1,4 +1,4 @@
-package com.example.securityjwt.repository;
+package com.example.securityjwt.repositories;
 
 import com.example.securityjwt.entity.Role;
 import org.springframework.data.jpa.repository.JpaRepository;

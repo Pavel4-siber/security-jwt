@@ -1,7 +1,7 @@
-package com.example.securityjwt.service;
+package com.example.securityjwt.services;
 
 import com.example.securityjwt.entity.Role;
-import com.example.securityjwt.repository.RoleRepository;
+import com.example.securityjwt.repositories.RoleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
